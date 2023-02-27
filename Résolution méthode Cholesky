@@ -1,0 +1,279 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jan  5 08:38:01 2023
+
+@author: laurafilet
+"""
+
+# Décomposition Cholesky 
+
+import numpy as np
+from numpy.linalg import inv
+import matplotlib.pyplot as plt
+
+###############################################################################
+
+# Question 1 
+
+###############################################################################
+
+def Cholesky(A) :
+    n,m = np.shape(A)
+    t = 0
+    L = np.zeros((n,m),dtype = float)
+    
+    if n != m :
+        print("\nAttention ! La matrice n'est pas carrée.")
+        return L == np.zeros((n,m)), t == 0
+    
+    
+    for j in range(0,m) :
+        
+        if j == 0 :
+        
+            if A[j,j] < 0 :
+                print("\nLa matrice ne peut pas être décomposée.")
+                return L == np.zeros((n,m)), t == 0 
+    
+            L[j,j] = (A[j,j])**0.5
+            t = t + 1
+            
+        else :
+            s = sum(L[j,k]**2 for k in range(0,j-1))
+            
+            if A[j,j] - s <= 0 :
+                print("\nLa matrice n'est pas définie positive.")
+                return L == np.zeros((n,m)), t == 0
+            
+            L[j,j] = (A[j,j]-s)**0.5
+            t = t + 1
+        for i in range(0,n) :
+        
+            if i != j:
+            
+                if j == 0 :
+                    L[i,j] = A[i,j]/L[j,j]
+                    t = t + 1
+                
+                else :
+                    s = sum(L[i,k]*L[j,k] for k in range(0,j))
+                    L[i,j] = (A[i,j]-s)/L[j,j]
+                    t = t + 1
+    
+    return L, t
+
+###############################################################################
+
+# Question 2
+
+###############################################################################
+
+def ResolCholesky(A,B) :
+    n,m =  np.shape(A)
+    L,t = Cholesky(A)
+    V_t = ((L == np.zeros((n,m))).all())
+    
+    if V_t == True and t == 0 : 
+        print("\nRésolution imposible")
+        return 
+    
+    else : 
+        Lt = L.T
+    
+        # LY = B => Y = L^-1.B
+    
+        y = inv(L)
+        
+        Y = np.dot(y,B)
+    
+        # Lt.X = Y => X = Lt^-1.Y
+    
+        x = inv(Lt)
+    
+        X = np.dot(x,Y)
+    
+        return X, t
+    
+###############################################################################
+
+# Question 3 
+
+###############################################################################
+
+print ("\nCholesky :")
+
+A = np.array ([[9,-3,3],[-3,5,-7],[3,-7,14]])
+b = np.array([15,5,-22])
+B = b.T
+n, m = np.shape(A)
+
+X, t = ResolCholesky(A, B)
+print("\nX = ", X, ",\ntemps de calcul = ", t)
+
+A1 = np.array([[2,-1],[-1,3]])
+b1 = np.array([3,-6])
+B1 = b1.T  
+n1, m1 = np.shape(A1)
+
+X1, t1 = ResolCholesky(A1, B1)
+print("\nX1 = ", X1, ",\ntemps de calcul = ", t1)
+    
+A2 = np.array([[1, 2, 0], [3, 1, 2], [0, 3, 1]])  
+b2 = np.array([1, 2, 3])
+B2 = np.transpose(b2)
+n2, m2 = np.shape(A2)
+
+X2, t2 = ResolCholesky(A2, B2)
+print("\nX2 = ",X2, ",\ntemps de calcul = ", t2)
+
+###############################################################################
+
+# Question 4 
+
+###############################################################################
+
+plt.plot([t,t1,t2], [n,n1,n2])
+plt.title("évolution du temps de calcul en fonction \nde la taille de la matrice")
+plt.xlabel("temps de calcul")
+plt.ylabel("taille de la matrice")
+plt.show()
+
+###############################################################################
+
+# Question 5 
+
+###############################################################################
+
+def err(A,B, X): 
+    mul = np.dot(A,X)
+    cal = mul - B
+    
+    numé = abs(cal)
+    déno = abs(B)
+    
+    er = numé/déno
+    
+    return er
+
+print ("\n \n \nerreur sur X = ", err(A,B,X))
+
+print ("\nerreur sur X1 = ", err(A1,B1,X1))
+
+print ("\nerreur sur X2 = ", err(A2,B2,X2))
+
+###############################################################################
+
+# Question 6
+
+###############################################################################
+
+print("\n \n \nPivot de Gauss :")
+
+A = np.array([[1, 2, 0], [3, 1, 2], [0, 3, 1]])  
+x = np.array([1, 2, 3])
+z = np.transpose(x)
+n, m = np.shape(A)
+
+A1 = np.array ([[9,-3,3],[-3,5,-7],[3,-7,14]])
+x1 = np.array([15,5,-22])
+z1 = b.T
+n1, m1 = np.shape(A1)
+
+A2 = np.array([[2,-1],[-1,3]])
+x2 = np.array([3,-6])
+z2 = b1.T  
+n2, m2 = np.shape(A2)
+
+################################################################
+
+def TRIreduite(A):
+    A = np.copy(A)
+    n, m = np.shape(A)
+    Achap = np.zeros((n, m))
+    t = 0
+    for i in range(0, n-1):
+        Achap[i+1, 0] = A[i+1, i]
+        t = t + 1
+    for i in range(0, n):
+        Achap[i, 1] = A[i, i]
+        t = t + 1
+    if m > 2 : 
+        
+        for i in range(0, n-1):
+            Achap[i, 2] = A[i, i+1]
+            t = t + 1
+            
+    return Achap, t
+
+Achap, t = TRIreduite(A)
+Achap1, t1 = TRIreduite(A1)
+Achap2, t2 = TRIreduite(A2)
+  
+def TRIcomplete(Achap, t):
+    Achap = np.copy(Achap)
+    n, m = np.shape(Achap)
+    A = np.zeros((n, m))
+    for i in range(0, n-1):
+        A[i+1, i] = Achap[i+1, 0]
+        t = t + 1
+    for i in range(0, n):
+        A[i, i] = Achap[i, 1]
+        t = t + 1
+        
+    if m > 2 : 
+        for i in range(0, n-1):
+            A[i, i+1] = Achap[i, 2]
+            t = t + 1
+    
+    return Achap, t
+    
+Achp,t = TRIcomplete(Achap,t) 
+Achp1,t1 = TRIcomplete(Achap1,t1)
+Achp2,t2 = TRIcomplete(Achap2,t2)
+
+
+def produitTRIvect(Achp, t, x):
+    Achp,t = TRIcomplete(Achap,t)
+    return  Achp@x, t 
+
+
+def produitTRIvect_2(Achp,t,x):
+    Achp,t = TRIcomplete(Achap, t)
+    X = np.dot(Achp, z)
+    return X, t
+
+ 
+X, t = produitTRIvect(Achp,t, x)
+print("\nX = ", X, ",\ntemps de calcul = ", t)
+
+X1, t1 = produitTRIvect(Achp1,t1, x1)
+print("\nX1 = ", X1, ",\ntemps de calcul = ", t1)
+
+X2, t2 = produitTRIvect_2(Achp2,t2, x2)
+print("\nX2 = ", X2, ",\ntemps de calcul = ", t2)
+
+plt.plot([t,t1,t2], [n,n1,n2])
+plt.title("évolution du temps de calcul en fonction \nde la taille de la matrice")
+plt.xlabel("temps de calcul")
+plt.ylabel("taille de la matrice")
+plt.show()
+
+###################################################################################
+
+def err(A,B, X): 
+    mul = np.dot(A,X)
+    cal = mul - B
+    
+    numé = abs(cal)
+    déno = abs(B)
+    
+    er = numé/déno
+    
+    return er
+
+print ("\n \n \nerreur sur X = ", err(A,x,X))
+
+print ("\nerreur sur X1 = ", err(A1,x1,X1))
+
+#print ("\nerreur sur X2 = ", err(A2,x2,X2))
